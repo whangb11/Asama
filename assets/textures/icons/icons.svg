@@ -1,0 +1,13 @@
+<svg width="128" height="64" viewBox="0 0 128 64" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- 左侧：文件夹图标（竖直拉伸、水平缩小，整体宽高与右侧文件一致） -->
+    <path d="M 16 50 L 16 20 L 30 20 L 35 14 L 50 14 L 50 50 Z" />
+    
+    <!-- 右侧：Lua 源文件图标 -->
+    <!-- 文件主体 -->
+    <path d="M 79 14 L 101 14 L 101 26 L 113 26 L 113 50 L 79 50 Z" />
+    <!-- Lua 月牙符号：绕自身包围盒中心 (91.5,32) 顺时针旋转 135°，然后整体右移 5px -->
+    <path d="M 84 20 Q 99 20 99 32 Q 99 44 84 44 Q 92 38 92 32 Q 92 26 84 20 Z"
+          transform="translate(5 0) rotate(135 91.5 32)" />
+  </g>
+</svg>

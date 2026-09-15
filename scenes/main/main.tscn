@@ -1,0 +1,159 @@
+[gd_scene format=3 uid="uid://crsr6y6ju5ija"]
+
+[ext_resource type="Script" uid="uid://c67maiwldmlbn" path="res://scenes/main/main.gd" id="1_hyk8p"]
+[ext_resource type="SpriteFrames" uid="uid://dhehwh278eycd" path="res://assets/textures/pyramid/pyramid.tres" id="2_iuonh"]
+
+[node name="Main" type="Control" unique_id=1039567512]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_hyk8p")
+
+[node name="HSplitContainer" type="HSplitContainer" parent="." unique_id=1638894617]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+split_offsets = PackedInt32Array(473)
+split_offset = 473
+
+[node name="LeftBar" type="PanelContainer" parent="HSplitContainer" unique_id=1118361102]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VSplitContainer" parent="HSplitContainer/LeftBar" unique_id=1795723015]
+layout_mode = 2
+split_offsets = PackedInt32Array(-83)
+split_offset = -83
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HSplitContainer/LeftBar/VBoxContainer" unique_id=256742388]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Title2" type="Label" parent="HSplitContainer/LeftBar/VBoxContainer/VBoxContainer" unique_id=1752227160]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "File/Folder Blacklist"
+
+[node name="FileBlacklistEditor" type="CodeEdit" parent="HSplitContainer/LeftBar/VBoxContainer/VBoxContainer" unique_id=207189694]
+custom_minimum_size = Vector2(0, 192)
+layout_mode = 2
+size_flags_vertical = 3
+text = "*Eggy*
+*Data*"
+placeholder_text = "name1
+name2
+name3
+..."
+backspace_deletes_composite_character_enabled = true
+scroll_smooth = true
+symbol_lookup_on_click = true
+symbol_tooltip_on_hover = true
+line_folding = true
+gutters_draw_line_numbers = true
+gutters_draw_fold_gutter = true
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="HSplitContainer/LeftBar/VBoxContainer" unique_id=1792235708]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Title" type="Label" parent="HSplitContainer/LeftBar/VBoxContainer/VBoxContainer2" unique_id=1802972237]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Files"
+
+[node name="Tree" type="Tree" parent="HSplitContainer/LeftBar/VBoxContainer/VBoxContainer2" unique_id=982096007]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="OpenButton" type="Button" parent="HSplitContainer/LeftBar/VBoxContainer/VBoxContainer2" unique_id=1556396691]
+layout_mode = 2
+size_flags_vertical = 8
+text = "Open"
+
+[node name="RightBar" type="PanelContainer" parent="HSplitContainer" unique_id=1974250628]
+layout_mode = 2
+
+[node name="VSplitContainer" type="VSplitContainer" parent="HSplitContainer/RightBar" unique_id=790736421]
+layout_mode = 2
+split_offsets = PackedInt32Array(192)
+split_offset = 192
+
+[node name="PanelContainer" type="VBoxContainer" parent="HSplitContainer/RightBar/VSplitContainer" unique_id=2105518887]
+layout_mode = 2
+
+[node name="Title2" type="Label" parent="HSplitContainer/RightBar/VSplitContainer/PanelContainer" unique_id=847747258]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+text = "GlobalBlacklist"
+
+[node name="GlobalBlacklistEditor" type="CodeEdit" parent="HSplitContainer/RightBar/VSplitContainer/PanelContainer" unique_id=213765995]
+custom_minimum_size = Vector2(0, 192)
+layout_mode = 2
+size_flags_vertical = 3
+placeholder_text = "name1
+name2
+name3
+..."
+backspace_deletes_composite_character_enabled = true
+scroll_smooth = true
+symbol_lookup_on_click = true
+symbol_tooltip_on_hover = true
+line_folding = true
+gutters_draw_line_numbers = true
+gutters_draw_fold_gutter = true
+
+[node name="PanelContainer2" type="VBoxContainer" parent="HSplitContainer/RightBar/VSplitContainer" unique_id=592557432]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="HSplitContainer/RightBar/VSplitContainer/PanelContainer2" unique_id=875285438]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+text = "Globals"
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="HSplitContainer/RightBar/VSplitContainer/PanelContainer2/Title" unique_id=1287103413]
+position = Vector2(69, 7)
+scale = Vector2(0.45, 0.5)
+sprite_frames = ExtResource("2_iuonh")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="HSplitContainer/RightBar/VSplitContainer/PanelContainer2" unique_id=1848017507]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HSplitContainer/RightBar/VSplitContainer/PanelContainer2/ScrollContainer" unique_id=742247553]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HBoxContainer" type="HBoxContainer" parent="HSplitContainer/RightBar/VSplitContainer/PanelContainer2" unique_id=1993513538]
+layout_mode = 2
+size_flags_vertical = 8
+
+[node name="SaveSingle" type="Button" parent="HSplitContainer/RightBar/VSplitContainer/PanelContainer2/HBoxContainer" unique_id=1164143171]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SaveSingle"
+
+[node name="SaveAll" type="Button" parent="HSplitContainer/RightBar/VSplitContainer/PanelContainer2/HBoxContainer" unique_id=1748680431]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SaveAll"
+
+[node name="FileDialog" type="FileDialog" parent="." unique_id=90711930]
+title = "Open a Directory"
+file_mode = 2
+display_mode = 1
+access = 2
+show_hidden_files = true
+
+[connection signal="pressed" from="HSplitContainer/LeftBar/VBoxContainer/VBoxContainer2/OpenButton" to="." method="_on_open_button_pressed"]
+[connection signal="pressed" from="HSplitContainer/RightBar/VSplitContainer/PanelContainer2/HBoxContainer/SaveSingle" to="." method="_on_save_single_pressed"]
+[connection signal="pressed" from="HSplitContainer/RightBar/VSplitContainer/PanelContainer2/HBoxContainer/SaveAll" to="." method="_on_save_all_pressed"]
+[connection signal="dir_selected" from="FileDialog" to="." method="_on_file_dialog_dir_selected"]
