@@ -53,18 +53,24 @@ func _ready() -> void:
 func find_global_variable_accesses(lua_code: String) -> Array[String]:
 	var global_vars: Array[String] = []
 	var seen: Dictionary = {}
+	# 本文件内被写入的全局变量名集合
+	var global_writes: Dictionary = {}
 
-	var lua_ast = LuaParser.new().parse_code(lua_code)
+	var lua_ast = LuaParser.new().parse_code(lua_code+"\n")
 	if lua_ast.has_errors():
 		printerr("Lua 代码解析失败，存在语法错误")
 		return global_vars
 
 	# 作用域栈，栈底为 chunk 作用域
 	var scope_stack: Array = [{}]
-	_walk(lua_ast.root, scope_stack, global_vars, seen)
+	_walk(lua_ast.root, scope_stack, global_vars, seen, global_writes)
+
+	# 只要某全局变量在本文件内出现过写操作，整个文件范围内都排除该标识符
+	if not global_writes.is_empty():
+		global_vars = global_vars.filter(func(name: String) -> bool: return not global_writes.has(name))
 	return global_vars
 
-func _walk(node: LuaASTNode, scope_stack: Array, global_vars: Array[String], seen: Dictionary) -> void:
+func _walk(node: LuaASTNode, scope_stack: Array, global_vars: Array[String], seen: Dictionary, global_writes: Dictionary) -> void:
 	var t := node.get_type()
 
 	var enter_scope := t in SCOPE_NODES
@@ -78,12 +84,37 @@ func _walk(node: LuaASTNode, scope_stack: Array, global_vars: Array[String], see
 		"identifier":
 			_handle_identifier(node, scope_stack, global_vars, seen)
 
+		"assignment_statement":
+			# 赋值左侧是写入目标：裸标识符是对全局变量的写操作 → 不计入；
+			# 但 globalname1.some_field = v 仍会读取基对象 globalname1 → 保留
+			var reached_assign := false
+			for i in range(node.get_child_count()):
+				var child := node.get_child(i)
+				if not reached_assign:
+					if child.get_type() == "=":
+						reached_assign = true
+					else:
+						_walk_write_target(child, scope_stack, global_vars, seen, global_writes)
+				else:
+					_walk(child, scope_stack, global_vars, seen, global_writes)
+
+		"function_declaration", "local_function_declaration":
+			# function name() / function a.b.c() / local function name()
+			# 函数名是写入目标：裸标识符不计入；点号/冒号形式仍保留基对象
+			for i in range(node.get_child_count()):
+				var child := node.get_child(i)
+				var ctype := child.get_type()
+				if ctype == "identifier" or ctype == "dot_index_expression" or ctype == "method_index_expression":
+					_walk_write_target(child, scope_stack, global_vars, seen, global_writes)
+				else:
+					_walk(child, scope_stack, global_vars, seen, global_writes)
+
 		"dot_index_expression", "method_index_expression":
 			# a.b / a:b / a.b.c / a.b:c.d  ...
 			# 只有第一个子节点是"被索引的对象"，才可能包含变量引用
 			# 后面的 identifier 全部是字段名/方法名，剪枝跳过
 			if node.get_child_count() > 0:
-				_walk(node.get_child(0), scope_stack, global_vars, seen)
+				_walk(node.get_child(0), scope_stack, global_vars, seen, global_writes)
 
 		"field":
 			# 表构造器 field：`key = value` 形式时，key 不是变量引用
@@ -92,10 +123,10 @@ func _walk(node: LuaASTNode, scope_stack: Array, global_vars: Array[String], see
 			   and node.get_child(0).get_type() == "identifier" \
 			   and node.get_child(1).get_type() == "=":
 				for i in range(1, n):
-					_walk(node.get_child(i), scope_stack, global_vars, seen)
+					_walk(node.get_child(i), scope_stack, global_vars, seen, global_writes)
 			else:
 				for i in range(n):
-					_walk(node.get_child(i), scope_stack, global_vars, seen)
+					_walk(node.get_child(i), scope_stack, global_vars, seen, global_writes)
 
 		"attribute":
 			# <const> / <close> —— 里面的 identifier 是属性名
@@ -107,10 +138,30 @@ func _walk(node: LuaASTNode, scope_stack: Array, global_vars: Array[String], see
 
 		_:
 			for i in range(node.get_child_count()):
-				_walk(node.get_child(i), scope_stack, global_vars, seen)
+				_walk(node.get_child(i), scope_stack, global_vars, seen, global_writes)
 
 	if enter_scope:
 		scope_stack.pop_back()
+
+
+# 处理"写入目标"节点：裸标识符是对全局变量的写操作，不计入；
+# 其余（dot/method/bracket 索引）仍交给 _walk，保留其基对象/索引表达式的读取
+func _walk_write_target(node: LuaASTNode, scope_stack: Array, global_vars: Array[String], seen: Dictionary, global_writes: Dictionary) -> void:
+	match node.get_type():
+		"variable_list":
+			# 赋值左侧变量列表：逐个按写入目标处理
+			for i in range(node.get_child_count()):
+				_walk_write_target(node.get_child(i), scope_stack, global_vars, seen, global_writes)
+		"identifier":
+			# globalname = some_value —— 纯写操作，不计入引用；
+			# 若它是全局变量（非局部），记入本文件写入集合，整个文件范围内都排除该标识符
+			var name := node.get_source_code()
+			if name in ["self", "const", "nil", "true", "false"]:
+				return
+			if not _is_declared_local(name, scope_stack):
+				global_writes[name] = true
+		_:
+			_walk(node, scope_stack, global_vars, seen, global_writes)
 
 
 # ---------------------------------------------------------------
@@ -187,9 +238,8 @@ func _handle_identifier(node: LuaASTNode, scope_stack: Array, global_vars: Array
 		return
 
 	# 逐层查找作用域
-	for scope in scope_stack:
-		if scope.has(name):
-			return
+	if _is_declared_local(name, scope_stack):
+		return
 
 	# 命中全局黑名单 → 不计入
 	if _is_global_blacklisted(name):
@@ -199,6 +249,13 @@ func _handle_identifier(node: LuaASTNode, scope_stack: Array, global_vars: Array
 	if not seen.has(name):
 		seen[name] = true
 		global_vars.append(name)
+
+# 名字是否已在任一作用域中被声明为局部变量
+func _is_declared_local(name: String, scope_stack: Array) -> bool:
+	for scope in scope_stack:
+		if scope.has(name):
+			return true
+	return false
 
 ## 该函数应当仅在测试时使用
 func _dump(node: LuaASTNode, depth := 0, ostr:Array[String] = [""]) -> void:
